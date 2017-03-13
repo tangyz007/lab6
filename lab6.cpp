@@ -34,6 +34,8 @@ public:
 		void normalize(void);
 		void save_file(char name[]);
 		
+		
+		
 };
 
 Signal::~Signal(){
@@ -91,7 +93,7 @@ Signal::Signal(int a){
 	//cout<<length<<endl;
 	fscanf(fp,"%d",&maximum_value);
 	max=(double)maximum_value;
-	cout<<max<<endl;
+	//cout<<max<<endl;
 	//cout<<maximum_value<<endl;
 	//printf("%d \n",maximum_value);
 	array=(int*)malloc(length*sizeof(int));
@@ -124,6 +126,7 @@ Signal::Signal(char* filename){
 	fscanf(fp,"%d",&maximum_value);
 	//printf("%d \n",maximum_value);
 	array=(int*)malloc(length*sizeof(int));
+	newarray=(double*)malloc(length*sizeof(double));
 	if(array == NULL)
 		cerr << "Error in memory allocation";
 	int i=0;
@@ -132,7 +135,9 @@ Signal::Signal(char* filename){
 	    fscanf(fp,"%d",(array+i));
 		//infile >> array[i];
 		//printf("%d",(array+i));
-		cout <<array[i];
+		*(newarray+i)=(double)*(array+i);
+		
+		cout <<newarray[i]<<" ";
 		i++;
 		}
 	fclose(fp);
@@ -262,22 +267,64 @@ void Signal::save_file(char name[])
 
 
 int main (int argc, char *argv[]) {
-	int i = 1,count;
-	int value,length;
+	int value;
+	void menu(Signal object);
+	char* name;
+	
+	
+	if((argv[1][0] == '-')&&(argv[1][1] == 'n'))
+	{
+		if(argv[2]==NULL)
+		{
+			cout<<"wrong input number"<<endl;
+			return 0;
+		}
+	cout<<"parametric constructor 1 called"<<endl;
+	//}
+	//name=argv[2];
+	value = atof(argv[2]);
+	Signal signal1(value);
+	menu(signal1);
+}
+else if((argv[1][0] == '-')&&(argv[1][1] == 'f'))
+{
+	cout<<"parametric constructor 2 called"<<endl;
+	if(argv[2]==NULL)
+		{
+			cout<<"wrong input number"<<endl;
+			return 0;
+		}
+	name=argv[2];
+	Signal signal1(name);
+	menu(signal1);
+}
+else if(argc==1)
+{
+	cout<<"default constructor"<<endl;
+	Signal signal1;
+	menu(signal1);
+}
+else 
+{
+	cout<<"wrong input"<<endl;
+}
+	return 0;
+	//Signal signal1(name);
+}
+	
+void menu(Signal signal1)
+{
+	int count;
+	int length;
 	double offset, scale;
-	int* ayeray;  // array
-	double* ayeray2;
-	double* ayeray3;
+	//int* ayeray;  // array
+	//double* ayeray2;
+	//double* ayeray3;
 	double mean;
 	char myname[100];
 	char* filename;
 	
-	//if (argc<=1){
-	//	cout<<"wrong input"<<endl;
-	//}
-	value = atof(argv[2]);
-	Signal signal1(value);
-	
+
 start:	
 	cout<<"Please choose an option!"<<endl;
 	cout<<"1:Do offset"<<endl;
