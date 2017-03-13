@@ -11,7 +11,8 @@ using namespace std;
 
 class Signal{
 private: int length;
-		 double maximum_value;
+		 int maximum_value;
+		 double max;
 		 double average;
 		 int *array;
 		 double *newarray;
@@ -23,11 +24,15 @@ public:
 		Signal(int a);// parametric constructor 1
 		Signal(char* filename); //parametric constructor 2
 		~Signal();// destructor
-		void Sig_info(int* array);
+		void Sig_info(void);
 		double* copyarray(char* filename);
-		void do_scale(char* filename,double scale1);
+		void do_scale(double scale1);
 		void do_offset(double offset1);
 		int return_length(char* filename);
+		double do_average(void);
+		void center(double mean1);
+		void normalize(void);
+		void save_file(char name[]);
 		
 };
 
@@ -58,6 +63,7 @@ Signal::Signal(){
 	fp= fopen("Raw_data_01.txt","r");
 	fscanf(fp,"%d",&length);
 	fscanf(fp,"%d",&maximum_value);
+	//cout<<maximum_value<<endl;
 	array=(int*)malloc(length*sizeof(int));
 	newarray=(double*)malloc(length*sizeof(double));
 	if(array == NULL)
@@ -78,28 +84,33 @@ Signal::Signal(){
 }
 
 Signal::Signal(int a){
-	int l;
 	FILE*fp;
 	sprintf(filename,"Raw_data_%02d.txt",a);
 	fp= fopen(filename,"r");
 	fscanf(fp,"%d",&length);
-	
-	fscanf(fp,"%f",&maximum_value);
+	//cout<<length<<endl;
+	fscanf(fp,"%d",&maximum_value);
+	max=(double)maximum_value;
+	cout<<max<<endl;
+	//cout<<maximum_value<<endl;
 	//printf("%d \n",maximum_value);
 	array=(int*)malloc(length*sizeof(int));
 	newarray=(double*)malloc(length*sizeof(double));
 	if(array == NULL)
 		cerr << "Error in memory allocation";
 	int i=0;
+	cout<<"the array is "<<endl;
 	while(i<length)
 	{ 
 	    fscanf(fp,"%d",(array+i));
 		//infile >> array[i];
 		//printf("%d",(array+i));
 		*(newarray+i)=(double)*(array+i);
-		//cout <<newarray[i];
+		
+		cout <<newarray[i]<<" ";
 		i++;
 		}
+		cout<<endl;
 	fclose(fp);
 	
 }
@@ -128,22 +139,23 @@ Signal::Signal(char* filename){
 	
 }
 
-void Signal::Sig_info(int* array)
+void Signal::Sig_info()
 {
 	int i;
-	double max=0,total=0;
+	double m=0,total=0;
 	for(i=0;i<length;i++)
 	{
-		if(*(array+i)>*(array+i+1))
+		if(*(newarray+i)>*(newarray+i+1))
 		{
-			max=(double)*(array+i);
+			m=(double)*(newarray+i);
 			
 		}
-		total=total+*(array+i);
+		total=total+*(newarray+i);
 		i++;
 	}
-	maximum_value=max;
-	printf("the maximum is %f",maximum_value);
+	printf("the length is %d \n",length);
+	max=m;
+	printf("the maximum is %f \n",m);
 	average=total/length;
 	printf("the average is %f",average);
 }
@@ -152,129 +164,179 @@ void Signal::Sig_info(int* array)
 void Signal::do_offset(double offset1)
 {
 	
-	double * data_offset= (double*)malloc(length*sizeof(double));
+	//double * data_offset= (double*)malloc(length*sizeof(double));
 	int i=0;
 	while(i<length)
 	{ 
 
-		*(data_offset+i)=*(newarray+i)+offset1;
-		cout<<data_offset[i]<<endl;
+		*(newarray+i)=*(newarray+i)+offset1;
+		cout<<newarray[i]<<endl;
 		//printf("\n %.4f",*(data_offset+i));
 		//printf("%d",*(newarray+i));
 		i++;
 	
 }
-free(data_offset);
+//free(data_offset);
 //return data_offset;
 }
 
-
-double*copyarray(char* filename)
+void Signal::do_scale(double scale1)
 {
-	int l,m;
-	 FILE*fp;
-	fp= fopen(filename,"r");
-	fscanf(fp,"%d",&l);
-	fscanf(fp,"%d",&m);
-	int * array1= (int*)malloc(l*sizeof(int));
-	double * array2 = (double*)malloc(l*sizeof(double));
 	int i=0;
-	while(i<l)
+	while(i<length)
 	{ 
-		fscanf(fp,"%d",(array1+i));
-		*(array2+i)=*(array1+i);  
+
+		*(newarray+i)=(double)*(newarray+i)*(scale1);
+		cout<<newarray[i]<<endl;
+		//printf("\n %.4f",*(newarray+i));
+		//printf("%d",*(newarray+i));
 		i++;
-		
-	}
-
-fclose(fp);
-
-	return array2;
+	
+}
+	
 }
 
 
 
 
-int return_length(char* filename)
-	{
-		int l,length;
-		FILE*fp;
 	
-	 
-	fp= fopen(filename,"r");
-	fscanf(fp,"%d",&l);
-	length=l;
-	fclose(fp);
-	return length;
+	double Signal::do_average()
+	{
+		int i;
+	double total=0;
+	for(i=0;i<length;i++)
+	{
+		
+		total=total+(double)*(array+i);
+		
 	}
+	//printf("the total is %f\n",total);
+	average=total/length;
+	//printf("the average is %f",average);
+	return average;
+	}
+	
+void Signal::center(double mean1)
+{
+	int i = 0;
+	while(i < length){
+		*(newarray+i)= *(array+i)-mean1;
+		printf("\n %.4f",*(newarray+i));	
+			
+		i++;
+	}
+	
+}
+void Signal::normalize(void)
+{
+	int i = 0;
+	//cout<<maximum_value<<endl;
+	while(i < length){
+		*(newarray+i)= (double)*(newarray+i)/maximum_value;
+		printf("\n %.4f",*(newarray+i));	
+			
+		i++;
+	}
+	
+
+	
+}
+void Signal::save_file(char name[])
+{
+	FILE*fp2;
+	 
+	 fp2 = fopen(name,"w");
+	 int i=0;
+	 fprintf(fp2,"%f\n",max);
+	while(i<length)
+	{ 
+		fprintf(fp2,"%f \n" , *(newarray+i));
+		i++;
+		
+	}
+	
+	fclose(fp2);
+	
+}
+
 
 
 int main (int argc, char *argv[]) {
 	int i = 1,count;
 	int value,length;
-	float offset, scale;
+	double offset, scale;
 	int* ayeray;  // array
 	double* ayeray2;
 	double* ayeray3;
 	double mean;
 	char myname[100];
 	char* filename;
-
-	while(i < argc){
-	if((argv[i][0] == '-'))
-	goto l1;
-	else{
-		if(i%2==0)
-		{i++;}
-	else 
-		printf("wrong input");
-	}
-l1:
-	count=argv[i][1];
+	
+	//if (argc<=1){
+	//	cout<<"wrong input"<<endl;
+	//}
+	value = atof(argv[2]);
+	Signal signal1(value);
+	
+start:	
+	cout<<"Please choose an option!"<<endl;
+	cout<<"1:Do offset"<<endl;
+	cout<<"2:Do Scale"<<endl;
+	cout<<"3:Do center"<<endl;
+	cout<<"4:Do Normalization"<<endl;
+	cout<<"5:Do statistics"<<endl;
+	cout<<"6:Print to a file"<<endl;
+	
+	cin>>count;
+	
 	switch(count)
 	{
-case 'n':		
-value = atof(argv[i+1]);
-if (value<=0||value>12)
-			{
-            printf("Int value should be 0-11\n");
-			}
-			else{
-				Signal signal1(value);
-				//Signal*objPtr=new Signal(value);
-				//delete objPtr;
-				//signal1(objPtr);
-				//sprintf(myname,"Raw_data_%02d.txt",value);
-				
-			}
-			break;
-	//case 'a':
-	//filename=argv[i+1];
-				//Signal signal2(filename);
-				//break;
-				
-	case 'o':
-		//Signal*objPtr= new Signal(value);
-		//length=return_length(myname);
-		//ayeray2=(double*)malloc(sizeof(double)*length);
-		//ayeray2=copyarray(myname);
+
+	case 1:
+		cout<<"please input offset number!"<<endl;
+		cin>>offset;
 		
-		offset = atof(argv[i+1]);//strtod(argv[i+1],NULL);
-		
-	
-		//ayeray3=(double*)malloc(sizeof(double)*length);
-		Signal signal2;
-		signal2.do_offset(offset);
+		//Signal signal1(value);
+		signal1.do_offset(offset);
+		signal1.Sig_info();
+		goto start;
 		break;	
+		
+	case 2:
+	cout<<"please input scale number!"<<endl;
+	cin>>scale;
+	//cout<<scale;
 	
+	//Signal signal1(value);
+		signal1.do_scale(scale);
+		//signal1.Sig_info();
+		goto start;
+		break;
+	case 3:
+		mean=signal1.do_average();
+		signal1.center(mean);
+		goto start;
+	
+	break;
+	case 4:
+	signal1.normalize();
+	goto start;
+	break;
+	case 5:
+	signal1.Sig_info();
+	break;
+	case 6:
+	cout<<"please input the output filename!"<<endl;
+	cin>>myname;
+	signal1.save_file(myname);
+	break;
+	default:
+	break;
 	}
 	
   //cout<<"please input"<<endl;
-  i++;
+
 	}
   
- free(ayeray3);
-	free(ayeray2);
+
 	
-	
-}
